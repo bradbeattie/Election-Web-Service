@@ -48,43 +48,21 @@ class ElectionWebServiceHandler(BaseHTTPRequestHandler):
 			request_raw = re.sub("\n", "", request_raw)
 			request = json.loads(request_raw)
 			
-			# Assume we're looking for a single winner
-			if "winners" not in request:
-				request["winners"] = 1
-			else:
-				request["winners"] = int(request["winners"])
-			
-			# Assume each ballot represents a single voter's preference
-			new_input = []
-			for ballot in request["ballots"]:
-				if type(ballot) is not types.DictType:
-					ballot = {"ballot":ballot}
-				if "count" not in ballot:
-					ballot["count"] = 1
-				else:
-					ballot["count"] = float(ballot["count"])
-				new_input.append(ballot)
-			request["ballots"] = new_input
-			
-			# Default the notation to ranking
-			if "notation" not in request:
-				request["notation"] = "ranking"
-			
 			# Send the data to the requested voting system
 			if request["voting_system"] == "plurality":
 				system = Plurality(request["ballots"])
 			elif request["voting_system"] == "plurality_at_large":
-				system = PluralityAtLarge(request["ballots"], request["winners"])
+				system = PluralityAtLarge(request["ballots"], required_winners = request["winners"])
 			elif request["voting_system"] == "irv":
-				system = IRV(request["ballots"], request["winners"])
+				system = IRV(request["ballots"])
 			elif request["voting_system"] == "stv":
-				system = STV(request["ballots"], request["winners"])
+				system = STV(request["ballots"], required_winners = request["winners"])
 			elif request["voting_system"] == "schulze_method":
-				system = SchulzeMethod(request["ballots"], request["notation"])
+				system = SchulzeMethod(request["ballots"], ballot_notation = request["notation"])
 			elif request["voting_system"] == "schulze_stv":
-				system = SchulzeSTV(request["ballots"], request["winners"], request["notation"])
+				system = SchulzeSTV(request["ballots"], required_winners = request["winners"], ballot_notation = request["notation"])
 			elif request["voting_system"] == "schulze_pr":
-				system = SchulzePR(request["ballots"], request["winners"], request["notation"])
+				system = SchulzePR(request["ballots"], winner_threshold = request["winners"], ballot_notation = request["notation"])
 			else:
 				raise Exception("No voting system specified")
 			response = system.as_dict()
