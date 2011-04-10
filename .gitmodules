@@ -1,0 +1,3 @@
+[submodule "pyvotecore"]
+	path = pyvotecore
+	url = git@github.com:bradbeattie/python-vote-core.git
